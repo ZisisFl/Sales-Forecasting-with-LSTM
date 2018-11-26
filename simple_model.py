@@ -17,7 +17,7 @@ dataframe = dataframe.rename(index=str, columns={'Unnamed: 0': 'item_id'})
 dataframe = dataframe.set_index('item_id')
 train_df = dataframe.T
 
-# make the problem supervised y is the x shifted -1
+# make the problem supervised test_df is the train_df shifted -1
 test_df = train_df
 test_df = test_df.shift(-1)
 test_df.fillna(0, inplace=True)
@@ -39,10 +39,10 @@ test_x = test_x.reshape((test_x.shape[0], 1, test_x.shape[1]))
 model = Sequential()
 model.add(LSTM(100, batch_input_shape=(1, train_x.shape[1], train_x.shape[2]), stateful=True))
 model.add(Dense(206))
-model.compile(loss='mae', optimizer='adam', metrics=['accuracy'])
+model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 
 # fit model
-history = model.fit(train_x, train_y, epochs=10, batch_size=1,
+history = model.fit(train_x, train_y, epochs=100, batch_size=1,   # 973 dividers = 1 7 139 973 61 dividers = 1 61
                     validation_data=(test_x, test_y), verbose=2, shuffle=False)
 # plot history
 pyplot.plot(history.history['loss'], label='train')

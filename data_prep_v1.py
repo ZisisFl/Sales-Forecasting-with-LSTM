@@ -9,7 +9,7 @@ OUTPUT_PATH = 'data/processed/'
 dataframe = pandas.read_csv(INPUT_PATH + 'sales_train_v2' + DATA_TYPE, parse_dates=['date'], infer_datetime_format=True,
                             dayfirst=True)
 
-dataframe = dataframe[dataframe['shop_id'] == 25] # take date only from shop with id 25
+dataframe = dataframe[dataframe['shop_id'] == 25]  # take date only from shop with id 25
 dataframe = dataframe.drop(['item_price', 'shop_id'], axis=1)
 print(dataframe)
 
