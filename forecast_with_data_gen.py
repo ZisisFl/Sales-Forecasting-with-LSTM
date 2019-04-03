@@ -58,7 +58,7 @@ scaler = MinMaxScaler(feature_range=(-1, 1))
 test_pred = model.predict_generator(validation_generator)
 
 # inverse data scaling before applying rmse
-test_pred_inv = scaler.inverse_transform(test_pred)
+#test_pred_inv = scaler.inverse_transform(test_pred)
 #test_y_inv = scaler.inverse_transform(test_y)
 
 #rmse = sqrt(mean_squared_error(test_y_inv, test_pred_inv))

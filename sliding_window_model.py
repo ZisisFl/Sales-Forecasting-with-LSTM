@@ -1,76 +1,86 @@
-import pandas
 from keras import Sequential
 from keras.layers import LSTM, Dense
 from matplotlib import pyplot
 from sklearn.metrics import mean_squared_error
 from numpy import sqrt
 from sklearn.preprocessing import MinMaxScaler
+from sliding_window_data_gen import DataGenerator
 
-DATA_TYPE = '.csv'
-INPUT_PATH = 'data/processed/'
-INPUT_DATA = 'PS4_SET_ALL_SHOPS'
+training_data = [[0 for x in range(973)] for x in range(60)]
+validation_data = [[0 for x in range(973)] for x in range(60)]
 
-dataframe = pandas.read_csv(INPUT_PATH + INPUT_DATA + DATA_TYPE)
-dataframe = dataframe.rename(index=str, columns={'Unnamed: 0': 'item_id'})
-dataframe = dataframe.set_index('item_id')
-x_data = dataframe
+for i in range(60):
+    for j in range(973):
+        training_data[i][j] = 'train_id_shop' + str(i) + '_day' + str(j)
+    for k in range(61):
+        validation_data[i][k] = 'validation_id_shop' + str(i) + '_day' + str(k)
 
+'''
+from random import randint
+input_ids_list = []
+target_ids_list = []
 
-# make the problem supervised test_df is the train_df shifted -1
-y_data = x_data.shift(-1)
-y_data.fillna(0, inplace=True)
+# loop through shops to find weeks
+for i in range(60):
+    for j in range(32): # take 32 weeks
+        pick = randint(0, 965) # last day is the day 972 but we need 7 days ahead of pick day so we avoid out of index error this way
+        while (training_data[i][pick]) in (input_ids_list or target_ids_list): #maybe change for while (training_data[i][pick] for x in range (7) in (input_ids_list or target_ids_list):
+            pick = randint(0, 965)
+            print('Duplicate pick again')
+        print(pick)
+        input_ids_list.extend(training_data[i][pick+x] for x in range(7))  # takes pick day and the next 6 days id
+        target_ids_list.append(training_data[i][pick + 7])  # takes target pick day (7 days after one week)
 
-# take the 2 last months for test
-test_date_range = pandas.date_range(start='2015/09/01', end='2015/10/31')
-test_n_days = test_date_range.nunique()
-n_shops = 60
+print(input_ids_list)
+print(len(input_ids_list))
+print(target_ids_list)
+print(len(target_ids_list))
 
-# change dimensions in order to prepare data
-x_data = x_data.T
-y_data = y_data.T
-
-# initialize empty test_x and test_y data frames
-test_x = pandas.DataFrame(index=range(0))
-test_y = pandas.DataFrame(index=range(0))
-
-for i in range(n_shops):
-    for j in range(test_n_days):
-        date = str(pandas.to_datetime(test_date_range[j]).date())
-
-        df1 = x_data[date]
-        df1 = df1.iloc[:, i:i+1]
-        test_x = pandas.concat([test_x, df1], axis=1)  # ,sort=True
-
-        df2 = y_data[date]
-        df2 = df2.iloc[:, i:i+1]
-        test_y = pandas.concat([test_y, df2], axis=1)  # ,sort=True
-
-
-# drop the test part from the x_data and y_data data frames
-for j in range(test_n_days):
-    x_data = x_data.drop([str(pandas.to_datetime(test_date_range[j]).date())], axis=1)
-    y_data = y_data.drop([str(pandas.to_datetime(test_date_range[j]).date())], axis=1)
-
-# x_data and y_data contain whole data minus test
-train_x = x_data
-train_y = y_data
-
-# return data to original dimensions
-train_x = train_x.T
-test_x = test_x.T
-train_y = train_y.T
-test_y = test_y.T
-
-print(train_x)
-print(train_y)
-print(test_x)
-print(test_y)
+input_ids_list = input_ids_list[7:]
+target_ids_list = target_ids_list[1:]
+print(input_ids_list)
+print(target_ids_list)
+'''
+# Parameters
+params_train = {'batch_size': 2,
+                'in_dim': (7, 215),
+                'out_dim': 215,
+                'weeks': 32,
+                'days_per_shop': 972,
+                'shuffle': False}
 
 
-# scale data in [-1, 1]
-#scaler = MinMaxScaler(feature_range=(-1, 1))
-#train_x = scaler.fit_transform(train_x)
-#test_x = scaler.fit_transform(test_x)
-#train_y = scaler.fit_transform(train_y)
-#test_y = scaler.fit_transform(test_y)
+params_val = {'batch_size': 2,
+              'in_dim': (7, 215),
+              'out_dim': 215,
+              'weeks': 4,
+              'days_per_shop': 61,
+              'shuffle': False}
 
+# initialize generators
+training_generator = DataGenerator(training_data, **params_train)
+validation_generator = DataGenerator(validation_data, **params_val)
+
+# design model
+model = Sequential()
+model.add(LSTM(100, input_shape=(7, 215), return_sequences=False))
+model.add(Dense(215))
+model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+
+
+# fit model
+history = model.fit_generator(generator=training_generator,
+                              epochs=10,
+                              verbose=2,
+                              validation_data=validation_generator,
+                              use_multiprocessing=False)
+
+
+# plot history
+pyplot.plot(history.history['loss'], label='train')
+pyplot.plot(history.history['val_loss'], label='test')
+pyplot.legend()
+pyplot.show()
+
+# make a prediction
+test_pred = model.predict_generator(validation_generator)

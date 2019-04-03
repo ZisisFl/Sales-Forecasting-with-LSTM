@@ -58,7 +58,7 @@ test_y = test_y.T
 
 # pad test_x and test_y with zeros to match train shape
 # pad(array, ((top, bottom), (left, right)), mode)
-test_x = np.pad(test_x, ((train_x.shape[0]-test_x.shape[0], 0), (0, 0)), 'constant', constant_values=0)
+#test_x = np.pad(test_x, ((train_x.shape[0]-test_x.shape[0], 0), (0, 0)), 'constant', constant_values=0)
 test_y = np.pad(test_y, ((train_y.shape[0]-test_y.shape[0], 0), (0, 0)), 'constant', constant_values=0)
 
 # scale data in [-1, 1]
@@ -69,9 +69,9 @@ train_y = scaler.fit_transform(train_y)
 test_y = scaler.fit_transform(test_y)
 
 # shape data for lstm model (Samples, Time steps, Features) (60 shops, 973 days, 207 items + 7 onehot days + 1 s_day)
-train_x = train_x.reshape((60, 973, train_x.shape[1]))  # 60, 973, 215
+#train_x = train_x.reshape((60, 973, train_x.shape[1]))  # 60, 973, 215
 train_y = train_y.reshape((60, 973, train_y.shape[1]))
-test_x = test_x.reshape((60, 973, test_x.shape[1]))
+#test_x = test_x.reshape((60, 973, test_x.shape[1]))
 test_y = test_y.reshape((60, 973, test_y.shape[1]))
 
 # create npz files
@@ -82,25 +82,45 @@ test_y = test_y.reshape((60, 973, test_y.shape[1]))
 #np.savez('data/' + 'test_y', *test_y[:])
 
 
-# create npy files
+# create npy files for forecast_with_data_gen.py
+#i = 0
+#for row in train_x:
+#    np.save('data/x_data/' + 'train_x' + '_id_' + str(i), row)
+#    i = i + 1
+
+#i = 0
+#for row in train_y:
+#    np.save('data/y_data/' + 'train_y' + '_id_' + str(i), row)
+#    i = i + 1
+
+#i = 0
+#for row in test_x:
+#    np.save('data/x_data/' + 'test_x' + '_id_' + str(i), row)
+#    i = i + 1
+
+#i = 0
+#for row in test_y:
+#    np.save('data/y_data/' + 'test_y' + '_id_' + str(i), row)
+#    i = i + 1
+
+# create npy files for sliding_window_model
 i = 0
+j = 0
 for row in train_x:
-    np.save('data/x_data/' + 'train_x' + '_id_' + str(i), row)
+    if i == 973:
+        i = 0
+        j = j + 1
+    np.save('data/data_rows/' + 'train_id_shop' + str(j) + '_day' + str(i), row)
     i = i + 1
 
 i = 0
-for row in train_y:
-    np.save('data/y_data/' + 'train_y' + '_id_' + str(i), row)
-    i = i + 1
-
-i = 0
+j = 0
 for row in test_x:
-    np.save('data/x_data/' + 'test_x' + '_id_' + str(i), row)
+    if i == 61:
+        i = 0
+        j = j + 1
+    np.save('data/data_rows/' + 'validation_id_shop' + str(j) + '_day' + str(i), row)
     i = i + 1
 
-i = 0
-for row in test_y:
-    np.save('data/y_data/' + 'test_y' + '_id_' + str(i), row)
-    i = i + 1
 
 

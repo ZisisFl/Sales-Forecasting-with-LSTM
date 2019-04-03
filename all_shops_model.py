@@ -3,8 +3,8 @@ import numpy as np
 from keras import Sequential
 from keras.layers import LSTM, Dense
 from matplotlib import pyplot
-from sklearn.metrics import mean_squared_error
 from numpy import sqrt
+from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 
 DATA_TYPE = '.csv'
@@ -119,10 +119,3 @@ for i in range(60):
 
 print(rmse)
 print('Val RMSE: %.3f' % (sum(rmse)/len(rmse)))
-
-# inverse data scaling before applying rmse
-#test_pred_inv = scaler.inverse_transform(test_pred)
-#test_y_inv = scaler.inverse_transform(test_y)
-
-#rmse = sqrt(mean_squared_error(test_y_inv, test_pred_inv))
-#print('Val RMSE: %.3f' % rmse)
