@@ -4,10 +4,11 @@ from matplotlib import pyplot
 from sklearn.metrics import mean_squared_error
 from numpy import sqrt
 from sklearn.preprocessing import MinMaxScaler
+from random import randint
 from sliding_window_data_gen import DataGenerator
 
 training_data = [[0 for x in range(973)] for x in range(60)]
-validation_data = [[0 for x in range(973)] for x in range(60)]
+validation_data = [[0 for x in range(61)] for x in range(60)]
 
 for i in range(60):
     for j in range(973):
@@ -15,46 +16,54 @@ for i in range(60):
     for k in range(61):
         validation_data[i][k] = 'validation_id_shop' + str(i) + '_day' + str(k)
 
+print(training_data)
+print(validation_data)
+
 '''
-from random import randint
-input_ids_list = []
-target_ids_list = []
+def random_samples(n_shops, n_weeks, n_days, data):
+    input_ids_list = []
+    target_ids_list = []
 
-# loop through shops to find weeks
-for i in range(60):
-    for j in range(32): # take 32 weeks
-        pick = randint(0, 965) # last day is the day 972 but we need 7 days ahead of pick day so we avoid out of index error this way
-        while (training_data[i][pick]) in (input_ids_list or target_ids_list): #maybe change for while (training_data[i][pick] for x in range (7) in (input_ids_list or target_ids_list):
-            pick = randint(0, 965)
-            print('Duplicate pick again')
-        print(pick)
-        input_ids_list.extend(training_data[i][pick+x] for x in range(7))  # takes pick day and the next 6 days id
-        target_ids_list.append(training_data[i][pick + 7])  # takes target pick day (7 days after one week)
+    # loop through shops to find weeks
+    for l in range(n_shops):
+        print(l)
+        for m in range(n_weeks):  # take a number of weeks
+            # last day is the day 972 but we need 7 days ahead of pick day so we avoid out of index error this way
+            pick = randint(0, n_days-7)
+            # maybe change for while (training_data[i][pick] for x in range (7) in (input_ids_list or target_ids_list):
+            while (data[i][pick]) in (
+                    input_ids_list or target_ids_list):
+                pick = randint(0, n_days-7)
+                #print('Duplicate pick again')
+            #print(pick)
+            input_ids_list.extend(data[i][pick + x] for x in range(7))  # takes pick day and the next 6 days id
+            target_ids_list.append(data[i][pick + 7])  # takes target pick day (7 days after one week)
 
-print(input_ids_list)
-print(len(input_ids_list))
-print(target_ids_list)
-print(len(target_ids_list))
+    return input_ids_list, target_ids_list
 
-input_ids_list = input_ids_list[7:]
-target_ids_list = target_ids_list[1:]
-print(input_ids_list)
-print(target_ids_list)
+
+training_input_ids_list, training_target_ids_list = random_samples(60, 32, 972, training_data)
+validation_input_ids_list, validation_target_ids_list = random_samples(60, 4, 60, validation_data)
+
+print(training_input_ids_list)
+print(len(training_input_ids_list))
+print(training_target_ids_list)
+print(len(training_target_ids_list))
+# kai dinw 2 listes gia train 2 gia val kai trexw etsi
 '''
+
 # Parameters
-params_train = {'batch_size': 2,
+params_train = {'batch_size': 32,
                 'in_dim': (7, 215),
                 'out_dim': 215,
-                'weeks': 32,
                 'days_per_shop': 972,
                 'shuffle': False}
 
 
-params_val = {'batch_size': 2,
+params_val = {'batch_size': 4,
               'in_dim': (7, 215),
               'out_dim': 215,
-              'weeks': 4,
-              'days_per_shop': 61,
+              'days_per_shop': 60,
               'shuffle': False}
 
 # initialize generators
