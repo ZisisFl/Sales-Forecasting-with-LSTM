@@ -51,15 +51,8 @@ pyplot.plot(history.history['val_loss'], label='test')
 pyplot.legend()
 pyplot.show()
 
-# data is scaled in [-1, 1]
-scaler = MinMaxScaler(feature_range=(-1, 1))
-
 # make a prediction
 test_pred = model.predict_generator(validation_generator)
-
-# inverse data scaling before applying rmse
-#test_pred_inv = scaler.inverse_transform(test_pred)
-#test_y_inv = scaler.inverse_transform(test_y)
-
-#rmse = sqrt(mean_squared_error(test_y_inv, test_pred_inv))
-#print('Val RMSE: %.3f' % rmse)
+# evaluate model
+score = model.evaluate_generator(validation_generator, 10, verbose=2)
+print(score)

@@ -24,9 +24,9 @@ class DataGenerator(keras.utils.Sequence):
     def __getitem__(self, index):
         'Generate one batch of data'
         # Generate indexes of the batch
-        input_indexes = self.input_indexes[index * self.batch_size:(index + 7) * self.batch_size]
+        input_indexes = self.input_indexes[index * self.batch_size * 7:(index + 1) * self.batch_size * 7]
         target_indexes = self.target_indexes[index * self.batch_size:(index + 1) * self.batch_size]
-        #print(input_indexes, target_indexes) # na thiorthwsw to input indexes pairnei epikaluptomena me step = batch size
+        #print(input_indexes, target_indexes)
         #print(index)
 
         #print(self.input_ids_list)
@@ -81,6 +81,5 @@ class DataGenerator(keras.utils.Sequence):
                 # Store sample
                 x[j, i, ] = np.load('data/data_rows/' + input_ids_list_temp[i] + '.npy')
             y[j] = np.load('data/data_rows/' + target_ids_list_temp[j] + '.npy')
-        #print(x.shape, y.shape)
 
         return x, y
