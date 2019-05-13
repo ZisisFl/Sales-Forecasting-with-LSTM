@@ -26,16 +26,16 @@ class DataGenerator(keras.utils.Sequence):
         # Generate indexes of the batch
         input_indexes = self.input_indexes[index * self.batch_size * 7:(index + 1) * self.batch_size * 7]
         target_indexes = self.target_indexes[index * self.batch_size:(index + 1) * self.batch_size]
-        #print(input_indexes, target_indexes)
-        #print(index)
+        # print(input_indexes, target_indexes)
+        # print(index)
 
-        #print(self.input_ids_list)
-        #print(self.target_ids_list)
+        # print(self.input_ids_list)
+        # print(self.target_ids_list)
         # Find list of ID
         input_ids_list_temp = [self.input_ids_list[k] for k in input_indexes]
         target_ids_list_temp = [self.target_ids_list[k] for k in target_indexes]
-        #print(input_ids_list_temp)
-        #print(target_ids_list_temp)
+        # print(input_ids_list_temp)
+        # print(target_ids_list_temp)
 
         # Generate data
         x, y = self.__data_generation(input_ids_list_temp, target_ids_list_temp)

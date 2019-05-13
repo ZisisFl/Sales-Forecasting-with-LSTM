@@ -6,6 +6,9 @@ from numpy import sqrt
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
+import time
+
+start_time = time.time()  # Time the execution
 
 
 DATA_TYPE = '.csv'
@@ -15,7 +18,7 @@ INPUT_DATA = 'PS4_SET'
 dataframe = pandas.read_csv(INPUT_PATH + INPUT_DATA + DATA_TYPE)
 dataframe = dataframe.rename(index=str, columns={'Unnamed: 0': 'item_id'})
 dataframe = dataframe.set_index('item_id')
-x_data = dataframe.T
+x_data = dataframe
 
 # make the problem supervised test_df is the train_df shifted -1
 y_data = x_data.shift(-1)
@@ -36,12 +39,12 @@ test_x = test_x.reshape((test_x.shape[0], 1, test_x.shape[1]))
 
 # design model
 model = Sequential()
-model.add(LSTM(100, batch_input_shape=(1, train_x.shape[1], train_x.shape[2]), stateful=True))
+model.add(LSTM(100, input_shape=(train_x.shape[1], train_x.shape[2]), stateful=False))
 model.add(Dense(206))
 model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 
 # fit model
-history = model.fit(train_x, train_y, epochs=10, batch_size=1,   # 973 dividers = 1 7 139 973 61 dividers = 1 61
+history = model.fit(train_x, train_y, epochs=10,
                     validation_data=(test_x, test_y), verbose=2, shuffle=False)
 
 # plot history
@@ -52,7 +55,7 @@ pyplot.show()
 
 
 # make a prediction
-test_pred = model.predict(test_x, 1)
+test_pred = model.predict(test_x)
 
 
 # inverse data scaling before applying rmse
@@ -62,3 +65,5 @@ test_y_inv = scaler.inverse_transform(test_y)
 # calculate rmse of predicted and test
 rmse = sqrt(mean_squared_error(test_y_inv, test_pred))
 print('Val RMSE: %.3f' % rmse)
+
+print("--- %s s ---" % (time.time() - start_time))

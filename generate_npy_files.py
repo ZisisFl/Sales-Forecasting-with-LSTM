@@ -56,10 +56,24 @@ test_x = test_x.T
 train_y = train_y.T
 test_y = test_y.T
 
+# used for forecast_with_data_gen.py
 # pad test_x and test_y with zeros to match train shape
 # pad(array, ((top, bottom), (left, right)), mode)
-#test_x = np.pad(test_x, ((train_x.shape[0]-test_x.shape[0], 0), (0, 0)), 'constant', constant_values=0)
+# test_x = np.pad(test_x, ((train_x.shape[0]-test_x.shape[0], 0), (0, 0)), 'constant', constant_values=0)
 test_y = np.pad(test_y, ((train_y.shape[0]-test_y.shape[0], 0), (0, 0)), 'constant', constant_values=0)
+
+# print(train_x.shape[0]/n_shops, test_x.shape[0]/n_shops)
+
+
+# remove sundays from datasets
+# train_x = train_x[train_x.Sun != 1]
+# test_x = test_x[test_x.Sun != 1]
+# train_x = train_x.drop(['Sun'], axis=1)
+# test_x = test_x.drop(['Sun'], axis=1)
+# print(train_x)
+# print(test_x)
+# print(train_x.shape[0]/n_shops, test_x.shape[0]/n_shops)
+
 
 # scale data in [-1, 1]
 scaler = MinMaxScaler(feature_range=(-1, 1))
@@ -69,17 +83,17 @@ train_y = scaler.fit_transform(train_y)
 test_y = scaler.fit_transform(test_y)
 
 # shape data for lstm model (Samples, Time steps, Features) (60 shops, 973 days, 207 items + 7 onehot days + 1 s_day)
-#train_x = train_x.reshape((60, 973, train_x.shape[1]))  # 60, 973, 215
-train_y = train_y.reshape((60, 973, train_y.shape[1]))
-#test_x = test_x.reshape((60, 973, test_x.shape[1]))
-test_y = test_y.reshape((60, 973, test_y.shape[1]))
+# train_x = train_x.reshape((60, 973, train_x.shape[1]))  # 60, 973, 215 used for forecast_with_data_gen.py
+# train_y = train_y.reshape((60, 973, train_y.shape[1]))  # 60, 973, 215 used for forecast_with_data_gen.py
+# test_x = test_x.reshape((60, 973, test_x.shape[1]))   # 60, 973, 215 used for forecast_with_data_gen.py
+# test_y = test_y.reshape((60, 973, test_y.shape[1]))   # 60, 973, 215 used for forecast_with_data_gen.py
 
-# create npz files
+# create npz files  # never used
 
-#np.savez('data/' + 'train_x', *train_x[:])
-#np.savez('data/' + 'train_y', *train_y[:])
-#np.savez('data/' + 'test_x', *test_x[:])
-#np.savez('data/' + 'test_y', *test_y[:])
+# np.savez('data/' + 'train_x', *train_x[:])
+# np.savez('data/' + 'train_y', *train_y[:])
+# np.savez('data/' + 'test_x', *test_x[:])
+# np.savez('data/' + 'test_y', *test_y[:])
 
 
 # create npy files for forecast_with_data_gen.py
@@ -107,16 +121,18 @@ test_y = test_y.reshape((60, 973, test_y.shape[1]))
 i = 0
 j = 0
 for row in train_x:
-    if i == 973:
+    if i == int(train_x.shape[0]/n_shops):
         i = 0
         j = j + 1
+        print(j)
     np.save('data/data_rows/' + 'train_id_shop' + str(j) + '_day' + str(i), row)
     i = i + 1
+
 
 i = 0
 j = 0
 for row in test_x:
-    if i == 61:
+    if i == int(test_x.shape[0]/n_shops):
         i = 0
         j = j + 1
     np.save('data/data_rows/' + 'validation_id_shop' + str(j) + '_day' + str(i), row)

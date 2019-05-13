@@ -6,29 +6,29 @@ import time
 
 start_time = time.time()  # Time the execution
 
-training_data = [[0 for x in range(973)] for x in range(60)]
-validation_data = [[0 for x in range(61)] for x in range(60)]
+training_data = [[0 for x in range(834)] for x in range(60)]
+validation_data = [[0 for x in range(53)] for x in range(60)]
 
 
 for i in range(60):
-    for j in range(973):
+    for j in range(834):
         training_data[i][j] = 'train_id_shop' + str(i) + '_day' + str(j)
-    for k in range(61):
+    for k in range(53):
         validation_data[i][k] = 'validation_id_shop' + str(i) + '_day' + str(k)
 
 
 # Parameters
 params_train = {'batch_size': 32,
-                'in_dim': (7, 215),
-                'out_dim': 215,
-                'days_per_shop': 972,
+                'in_dim': (7, 214),
+                'out_dim': 214,
+                'days_per_shop': 833,
                 'shuffle': False}
 
 
 params_val = {'batch_size': 10,
-              'in_dim': (7, 215),
-              'out_dim': 215,
-              'days_per_shop': 60,
+              'in_dim': (7, 214),
+              'out_dim': 214,
+              'days_per_shop': 52,
               'shuffle': False}
 
 
@@ -39,8 +39,8 @@ validation_generator = DataGenerator(validation_data, **params_val)
 
 # design model
 model = Sequential()
-model.add(LSTM(100, input_shape=(7, 215), return_sequences=False))
-model.add(Dense(215))
+model.add(LSTM(100, input_shape=(7, 214), return_sequences=False))
+model.add(Dense(214))
 model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 
 
@@ -57,6 +57,7 @@ pyplot.plot(history.history['loss'], label='train')
 pyplot.plot(history.history['val_loss'], label='test')
 pyplot.legend()
 pyplot.show()
+
 
 # make a prediction
 test_pred = model.predict_generator(validation_generator)

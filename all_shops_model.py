@@ -6,6 +6,9 @@ from matplotlib import pyplot
 from numpy import sqrt
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
+import time
+
+start_time = time.time()  # Time the execution
 
 DATA_TYPE = '.csv'
 INPUT_PATH = 'data/processed/'
@@ -119,3 +122,5 @@ for i in range(60):
 
 print(rmse)
 print('Val RMSE: %.3f' % (sum(rmse)/len(rmse)))
+
+print("--- %s s ---" % (time.time() - start_time))

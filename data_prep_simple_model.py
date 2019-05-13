@@ -11,7 +11,7 @@ dataframe = pandas.read_csv(INPUT_PATH + 'sales_train_v2' + DATA_TYPE, parse_dat
 
 dataframe = dataframe[dataframe['shop_id'] == 25]  # take data only from shop with id 25
 dataframe = dataframe.drop(['item_price', 'shop_id'], axis=1)
-print(dataframe)
+#print(dataframe)
 
 # create a dataframe with items from PS4 categories
 item_cat = pandas.read_csv(INPUT_PATH + 'items' + DATA_TYPE)
@@ -28,7 +28,7 @@ dataframe = dataframe[dataframe['item_cnt_day'] > 0]
 number_of_unique_items = dataframe['item_id'].nunique()
 n_days_items_sold = dataframe['date'].nunique()  # number of different days that items where sold
 
-# print(dataframe)
+#print(dataframe)
 # print(number_of_unique_items)
 # print(n_days_items_sold)
 
@@ -36,7 +36,7 @@ n_days_items_sold = dataframe['date'].nunique()  # number of different days that
 d0 = date(2013, 1, 1)
 d1 = date(2015, 10, 31)
 delta = (d1 - d0).days
-# print(delta)
+print(delta)
 
 u_item_list = dataframe.item_id.unique().tolist()
 date_range = pandas.date_range(start='1/1/2013', end='31/10/2015')
@@ -94,7 +94,7 @@ for i in range(len(significant_days)):
 
 
 result = pandas.concat([df_items, df_days, df_s_days])
-
+result = result.T
 print(result)
 
 result.to_csv(OUTPUT_PATH + 'PS4_SET' + DATA_TYPE, encoding='utf-8', index=True, header=True)

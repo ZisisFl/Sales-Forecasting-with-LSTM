@@ -2,10 +2,9 @@ from data_generator import DataGenerator
 from keras import Sequential
 from keras.layers import LSTM, Dense
 from matplotlib import pyplot
-from sklearn.metrics import mean_squared_error
-from numpy import sqrt
-from sklearn.preprocessing import MinMaxScaler
+import time
 
+start_time = time.time()  # Time the execution
 
 train_input = []
 test_input = []
@@ -54,5 +53,7 @@ pyplot.show()
 # make a prediction
 test_pred = model.predict_generator(validation_generator)
 # evaluate model
-score = model.evaluate_generator(validation_generator, 10, verbose=2)
+score = model.evaluate_generator(validation_generator, 30, verbose=2)
 print(score)
+
+print("--- %s s ---" % (time.time() - start_time))
