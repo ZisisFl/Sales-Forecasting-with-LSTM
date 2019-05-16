@@ -12,6 +12,7 @@ start_time = time.time()  # Time the execution
 
 DATA_TYPE = '.csv'
 INPUT_PATH = 'data/processed/'
+# INPUT_DATA = 'CATEGORIES_ALL_SHOPS'
 INPUT_DATA = 'PS4_SET_ALL_SHOPS'
 
 dataframe = pandas.read_csv(INPUT_PATH + INPUT_DATA + DATA_TYPE)
@@ -75,16 +76,16 @@ train_y = scaler.fit_transform(train_y)
 test_y = scaler.fit_transform(test_y)
 
 # shape data for lstm model (Samples, Time steps, Features) (60 shops, 973 days, 207 items + 7 onehot days + 1 s_day)
-train_x = train_x.reshape((60, 973, train_x.shape[1]))  # 60, 973, 215
-train_y = train_y.reshape((60, 973, train_y.shape[1]))
-test_x = test_x.reshape((60, 973, test_x.shape[1]))
-test_y = test_y.reshape((60, 973, test_y.shape[1]))
+train_x = train_x.reshape((n_shops, 1034 - test_n_days, train_x.shape[1]))  # 60, 973, 215
+train_y = train_y.reshape((n_shops, 1034 - test_n_days, train_y.shape[1]))
+test_x = test_x.reshape((n_shops, 1034 - test_n_days, test_x.shape[1]))
+test_y = test_y.reshape((n_shops, 1034 - test_n_days, test_y.shape[1]))
 
 
 # design model
 model = Sequential()
 model.add(LSTM(100, input_shape=(train_x.shape[1], train_x.shape[2]), return_sequences=True))
-model.add(Dense(215))
+model.add(Dense(train_x.shape[2]))
 model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 
 
@@ -109,15 +110,15 @@ test_pred = model.predict(test_x)
 
 
 # inverse data scaling before applying rmse
-test_pred_inv = np.empty([60, 973, 215])
-test_y_inv = np.empty([60, 973, 215])
+test_pred_inv = np.empty([n_shops, 1034 - test_n_days, train_x.shape[2]])
+test_y_inv = np.empty([n_shops, 1034 - test_n_days, train_x.shape[2]])
 
-for i in range(60):
+for i in range(n_shops):
     test_pred_inv[i, ] = scaler.inverse_transform(test_pred[i])
     test_y_inv[i, ] = scaler.inverse_transform(test_y[i])
 
 rmse = []
-for i in range(60):
+for i in range(n_shops):
     rmse.append(sqrt(mean_squared_error(test_y_inv[i], test_pred_inv[i])))
 
 print(rmse)

@@ -78,24 +78,22 @@ for i in range(len(significant_days)):
     df_s_days.at['S_Day', significant_days[i]] = 1
 
 # initialize sales dataframe with 207x1034 NAN values
-sales = pandas.DataFrame(index=range(number_of_unique_items))
+sales = pandas.DataFrame()
 
 for i in range(60):
     df = dataframe[dataframe['shop_id'] == i]
 
     # df_items: dataframe that contains number of sales for every item everyday
-    df_items = pandas.DataFrame(numpy.random.randint(low=0, high=1, size=(number_of_unique_items, delta+1)),
-                                index=u_item_list, columns=date_range)
+    df_items = pandas.DataFrame(index=u_item_list, columns=date_range)
     df_items = (df.pivot('item_id', 'date', 'item_cnt_day').reindex(index=df_items.index, columns=df_items.columns).
                 fillna(0))
     # print(df_items)
 
     # result: is a df that contains values, dates, one hot rep weekdays and significant days for every shop
     result = pandas.concat([df_items, df_days, df_s_days])
-    sales = pandas.concat([result, sales], axis=1)
+    sales = pandas.concat([sales, result], axis=1)
 
-sales = sales.dropna()  # delete the NAN values
 sales = sales.T
-# print(sales)
+#print(sales)
 
 sales.to_csv(OUTPUT_PATH + 'PS4_SET_ALL_SHOPS' + DATA_TYPE, encoding='utf-8', index=True, header=True)

@@ -5,6 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 DATA_TYPE = '.csv'
 INPUT_PATH = 'data/processed/'
 INPUT_DATA = 'PS4_SET_ALL_SHOPS'
+# INPUT_DATA = 'CATEGORIES_ALL_SHOPS'
 
 dataframe = pandas.read_csv(INPUT_PATH + INPUT_DATA + DATA_TYPE)
 dataframe = dataframe.rename(index=str, columns={'Unnamed: 0': 'item_id'})
@@ -60,7 +61,7 @@ test_y = test_y.T
 # pad test_x and test_y with zeros to match train shape
 # pad(array, ((top, bottom), (left, right)), mode)
 # test_x = np.pad(test_x, ((train_x.shape[0]-test_x.shape[0], 0), (0, 0)), 'constant', constant_values=0)
-test_y = np.pad(test_y, ((train_y.shape[0]-test_y.shape[0], 0), (0, 0)), 'constant', constant_values=0)
+# test_y = np.pad(test_y, ((train_y.shape[0]-test_y.shape[0], 0), (0, 0)), 'constant', constant_values=0)
 
 # print(train_x.shape[0]/n_shops, test_x.shape[0]/n_shops)
 
@@ -124,7 +125,6 @@ for row in train_x:
     if i == int(train_x.shape[0]/n_shops):
         i = 0
         j = j + 1
-        print(j)
     np.save('data/data_rows/' + 'train_id_shop' + str(j) + '_day' + str(i), row)
     i = i + 1
 

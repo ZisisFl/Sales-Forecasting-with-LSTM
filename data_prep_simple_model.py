@@ -44,8 +44,7 @@ week = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 significant_days = ['2013-11-29', '2014-11-28', '2013-12-23', '2013-12-24', '2014-12-23', '2014-12-24']
 
 # df_items: dataframe that contains number of sales for every item everyday
-df_items = pandas.DataFrame(numpy.random.randint(low=0, high=1, size=(number_of_unique_items, delta+1)),
-                       index=u_item_list, columns=date_range)
+df_items = pandas.DataFrame(index=u_item_list, columns=date_range)
 df_items = (dataframe.pivot('item_id', 'date', 'item_cnt_day').reindex(index=df_items.index, columns=df_items.columns).
             fillna(0))
 
