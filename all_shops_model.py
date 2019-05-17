@@ -113,15 +113,20 @@ test_pred = model.predict(test_x)
 test_pred_inv = np.empty([n_shops, 1034 - test_n_days, train_x.shape[2]])
 test_y_inv = np.empty([n_shops, 1034 - test_n_days, train_x.shape[2]])
 
+
+# invert scaling for for test_pred and test_y
 for i in range(n_shops):
     test_pred_inv[i, ] = scaler.inverse_transform(test_pred[i])
     test_y_inv[i, ] = scaler.inverse_transform(test_y[i])
 
+
+# calculate rmse for each shop
 rmse = []
 for i in range(n_shops):
     rmse.append(sqrt(mean_squared_error(test_y_inv[i], test_pred_inv[i])))
-
 print(rmse)
+
+
 print('Val RMSE: %.3f' % (sum(rmse)/len(rmse)))
 
 print("--- %s s ---" % (time.time() - start_time))

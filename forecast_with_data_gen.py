@@ -52,8 +52,10 @@ pyplot.show()
 
 # make a prediction
 test_pred = model.predict_generator(validation_generator)
-# evaluate model
-score = model.evaluate_generator(validation_generator, 30, verbose=2)
+
+
+# evaluate model (val generator, steps (batches of samples) to yield from generator before stopping)
+score = model.evaluate_generator(validation_generator, 60, verbose=2)
 print(score)
 
 print("--- %s s ---" % (time.time() - start_time))

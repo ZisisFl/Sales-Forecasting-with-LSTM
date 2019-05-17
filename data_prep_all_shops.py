@@ -9,6 +9,7 @@ OUTPUT_PATH = 'data/processed/'
 dataframe = pandas.read_csv(INPUT_PATH + 'sales_train_v2' + DATA_TYPE, parse_dates=['date'], infer_datetime_format=True,
                             dayfirst=True)
 
+# drop column price
 dataframe = dataframe.drop(['item_price'], axis=1)
 
 # create a dataframe with items from PS4 categories
