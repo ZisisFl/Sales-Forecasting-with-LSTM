@@ -1,6 +1,7 @@
 import pandas
 import numpy as np
 from keras import Sequential
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import LSTM, Dense
 from matplotlib import pyplot
 from numpy import sqrt
@@ -86,7 +87,15 @@ test_y = test_y.reshape((n_shops, 1034 - test_n_days, test_y.shape[1]))
 model = Sequential()
 model.add(LSTM(100, input_shape=(train_x.shape[1], train_x.shape[2]), return_sequences=True))
 model.add(Dense(train_x.shape[2]))
-model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mean_squared_error'])
+
+
+# create checkpoint callback to keep epoch with smallest val_loss
+filepath = 'h5_files/all_shops_model_best.h5'
+checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+
+# early stoping callback to stop training after a given number of epochs
+early_stopping_callback = EarlyStopping(monitor='val_loss', patience=3)
 
 
 # fit model
@@ -95,6 +104,7 @@ history = model.fit(train_x, train_y,
                     batch_size=2,
                     validation_data=(test_x, test_y),
                     verbose=2,
+                    callbacks=[checkpoint, early_stopping_callback],
                     shuffle=False)
 
 

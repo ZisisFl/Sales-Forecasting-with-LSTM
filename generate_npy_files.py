@@ -8,7 +8,7 @@ INPUT_DATA = 'PS4_SET_ALL_SHOPS'
 # INPUT_DATA = 'CATEGORIES_ALL_SHOPS'
 
 FLAG = 1  # 1 GENERATE DATA PER DAY / 0 GENERATE DATA PER SHOP
-INCLUDE_SUNDAYS = 1  # 1 YES / 0 NO
+INCLUDE_SUNDAYS = 0  # 1 NO / 0 YES
 
 dataframe = pandas.read_csv(INPUT_PATH + INPUT_DATA + DATA_TYPE)
 dataframe = dataframe.rename(index=str, columns={'Unnamed: 0': 'item_id'})

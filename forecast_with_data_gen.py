@@ -33,7 +33,7 @@ validation_generator = DataGenerator(test_input, test_target, **params)
 model = Sequential()
 model.add(LSTM(100, input_shape=(973, 215), return_sequences=True))
 model.add(Dense(215))
-model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mean_squared_error'])
 
 
 # fit model

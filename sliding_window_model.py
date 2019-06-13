@@ -1,4 +1,5 @@
 from keras import Sequential
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import LSTM, Dense
 from matplotlib import pyplot
 from sliding_window_data_gen import DataGenerator
@@ -16,7 +17,8 @@ for i in range(60):
     for k in range(61):
         validation_data[i][k] = 'validation_id_shop' + str(i) + '_day' + str(k)
 
-number_of_features = 92  # number_of_features = 215
+# number_of_features = 92  # for categories
+number_of_features = 215  # for products
 train_on_n_days = 7
 
 # Parameters
@@ -43,7 +45,15 @@ validation_generator = DataGenerator(validation_data, **params_val)
 model = Sequential()
 model.add(LSTM(100, input_shape=(train_on_n_days, number_of_features), return_sequences=False))
 model.add(Dense(number_of_features))
-model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mean_squared_error'])
+
+
+# create checkpoint callback to keep epoch with smallest val_loss
+filepath = 'h5_files/sliding_window_best.h5'
+checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+
+# early stoping callback to stop training after a given number of epochs
+early_stopping_callback = EarlyStopping(monitor='val_loss', patience=5)
 
 
 # fit model
@@ -51,6 +61,7 @@ history = model.fit_generator(generator=training_generator,
                               epochs=10,
                               verbose=2,
                               validation_data=validation_generator,
+                              callbacks=[checkpoint, early_stopping_callback],
                               use_multiprocessing=False)
 
 
