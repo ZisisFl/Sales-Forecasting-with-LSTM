@@ -153,6 +153,7 @@ test_y_list = []
 test_pred_list = []
 test_date_range = pandas.date_range(start='2015/09/01', end='2015/10/31')
 
+
 for i in range(test_y.shape[0]):
     sum_per_day_y = 0
     sum_per_day_pred = 0

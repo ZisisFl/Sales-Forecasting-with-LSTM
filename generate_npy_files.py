@@ -1,14 +1,14 @@
 import pandas
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+
 
 DATA_TYPE = '.csv'
 INPUT_PATH = 'data/processed/'
-INPUT_DATA = 'PS4_SET_ALL_SHOPS'
 # INPUT_DATA = 'CATEGORIES_ALL_SHOPS'
+INPUT_DATA = 'PS4_SET_ALL_SHOPS'
 
-FLAG = 1  # 1 GENERATE DATA PER DAY / 0 GENERATE DATA PER SHOP
-INCLUDE_SUNDAYS = 0  # 1 NO / 0 YES
+FLAG = 1  # 0 GENERATE DATA PER SHOP / 1 GENERATE DATA PER DAY
+SCALE_DATA = 1  # 0 NO SCALING / 1 SCALING
 
 dataframe = pandas.read_csv(INPUT_PATH + INPUT_DATA + DATA_TYPE)
 dataframe = dataframe.rename(index=str, columns={'Unnamed: 0': 'item_id'})
@@ -19,68 +19,91 @@ x_data = dataframe
 y_data = x_data.shift(-1)
 y_data.fillna(0, inplace=True)
 
-# take the 2 last months for test
+# drop S_day [:, :-1] or one hot rep and S_day [:, :-8] from training
+x_data = x_data.iloc[:, :-8]
+
+# drop last 8 columns referring to one hot rep and S_day from the target values
+y_data = y_data.iloc[:, :-8]
+
 test_date_range = pandas.date_range(start='2015/09/01', end='2015/10/31')
-test_n_days = test_date_range.nunique()
-n_shops = 60
 
-# change dimensions in order to prepare data
-x_data = x_data.T
-y_data = y_data.T
+n_shops = 60  # number of shops
+days_per_shop = 1034  # number of days both train and test
+test_days = test_date_range.nunique()  # number of test days
+train_days = days_per_shop - test_days  # number of train days
+n_features = 207  # 207 for products / 84 for categories
 
-# initialize empty test_x and test_y data frames
-test_x = pandas.DataFrame(index=range(0))
-test_y = pandas.DataFrame(index=range(0))
+x_data = x_data.values
+y_data = y_data.values
 
-for i in range(n_shops):
-    for j in range(test_n_days):
-        date = str(pandas.to_datetime(test_date_range[j]).date())
+# print(np.count_nonzero(x_data))
 
-        df1 = x_data[date]
-        df1 = df1.iloc[:, i:i+1]
-        test_x = pandas.concat([test_x, df1], axis=1)  # ,sort=True
-
-        df2 = y_data[date]
-        df2 = df2.iloc[:, i:i+1]
-        test_y = pandas.concat([test_y, df2], axis=1)  # ,sort=True
+train_x = np.empty([0, n_features])
+train_y = np.empty([0, n_features])
+test_x = np.empty([0, n_features])
+test_y = np.empty([0, n_features])
 
 
-# drop the test part from the x_data and y_data data frames
-for j in range(test_n_days):
-    x_data = x_data.drop([str(pandas.to_datetime(test_date_range[j]).date())], axis=1)
-    y_data = y_data.drop([str(pandas.to_datetime(test_date_range[j]).date())], axis=1)
+def scaler(target_data):
+    minmax = []
+    n_columns = target_data.shape[1]
+    n_rows = target_data.shape[0]
+    print(n_rows, n_columns)
+    for column in range(n_columns):
+        value_min = min(target_data[:, column])
+        value_max = max(target_data[:, column])
+        minmax.append([value_min, value_max])
+    return minmax
 
-# x_data and y_data contain whole data minus test
-train_x = x_data
-train_y = y_data
 
-# return data to original dimensions
-train_x = train_x.T
-test_x = test_x.T
-train_y = train_y.T
-test_y = test_y.T
+def scale_data(target_data, minmax):
+    target_data = target_data.astype(float)
+    n_columns = target_data.shape[1]
+    n_rows = target_data.shape[0]
+    for column in range(n_columns):
+        for row in range(n_rows):
+            if minmax[column][1] > 0:  # if max = 0 there is division error and column is for sure full of zero
+                target_data[row, column] = (target_data[row, column] - minmax[column][0]) / (minmax[column][1] - minmax[column][0])
+    return target_data
 
 
 if FLAG == 0:
-    # pad test_x and test_y with zeros to match train shape
-    # pad(array, ((top, bottom), (left, right)), mode)
-    test_x = np.pad(test_x, ((train_x.shape[0] - test_x.shape[0], 0), (0, 0)), 'constant', constant_values=0)
-    test_y = np.pad(test_y, ((train_y.shape[0] - test_y.shape[0], 0), (0, 0)), 'constant', constant_values=0)
-    # print(train_x.shape[0]/n_shops, test_x.shape[0]/n_shops)
+    for i in range(0, n_shops):
+        np_array = x_data[(days_per_shop - test_days) + (i * days_per_shop): days_per_shop + (i * days_per_shop), :]
+        # pad test_x and test_y with zeros to match train shape
+        # pad(array, ((top, bottom), (left, right)), mode)
+        np_array = np.pad(np_array, ((973 - 61, 0), (0, 0)), 'constant', constant_values=0)
+        test_x = np.concatenate((test_x, np_array), axis=0)
 
-    # scale data in [-1, 1]
-    scaler = MinMaxScaler(feature_range=(-1, 1))
-    train_x = scaler.fit_transform(train_x)
-    test_x = scaler.fit_transform(test_x)
-    train_y = scaler.fit_transform(train_y)
-    test_y = scaler.fit_transform(test_y)
+        np_array = y_data[(days_per_shop - test_days) + (i * days_per_shop): days_per_shop + (i * days_per_shop), :]
+        np_array = np.pad(np_array, ((973 - 61, 0), (0, 0)), 'constant', constant_values=0)
+        test_y = np.concatenate((test_y, np_array), axis=0)
+
+        np_array = x_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
+        train_x = np.concatenate((train_x, np_array), axis=0)
+
+        np_array = x_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
+        train_y = np.concatenate((train_y, np_array), axis=0)
+
+    if SCALE_DATA == 1:
+        scaler_train_x = scaler(train_x)
+        scaler_train_y = scaler(train_y)
+        scaler_test_x = scaler(test_x)
+        scaler_test_y = scaler(test_y)
+
+        train_x = scale_data(train_x, scaler_train_x)
+        train_y = scale_data(train_y, scaler_train_y)
+        test_x = scale_data(test_x, scaler_test_x)
+        test_y = scale_data(test_y, scaler_test_y)
+
+        # save test_y scaling matrix in order to inverse scaling
+        np.save('data/y_data/test_y_minmax', scaler_test_y)
 
     # shape data for lstm model (Samples, Time steps, Features)
-    # (60 shops, 973 days, 207 items + 7 onehot days + 1 s_day) for forecast with data gen
-    train_x = train_x.reshape((n_shops, 1034 - test_n_days, train_x.shape[1]))
-    train_y = train_y.reshape((n_shops, 1034 - test_n_days, train_y.shape[1]))
-    test_x = test_x.reshape((n_shops, 1034 - test_n_days, test_x.shape[1]))
-    test_y = test_y.reshape((n_shops, 1034 - test_n_days, test_y.shape[1]))
+    train_x = train_x.reshape((n_shops, 1034 - test_days, train_x.shape[1]))  # 60, 973, 215
+    train_y = train_y.reshape((n_shops, 1034 - test_days, train_y.shape[1]))
+    test_x = test_x.reshape((n_shops, 1034 - test_days, test_x.shape[1]))
+    test_y = test_y.reshape((n_shops, 1034 - test_days, test_y.shape[1]))
 
     # create npy files for forecast_with_data_gen.py
     i = 0
@@ -103,22 +126,18 @@ if FLAG == 0:
         np.save('data/y_data/' + 'test_y' + '_id_' + str(i), row)
         i = i + 1
 else:
-    if INCLUDE_SUNDAYS == 1:
-        # remove sundays from datasets
-        train_x = train_x[train_x.Sun != 1]
-        test_x = test_x[test_x.Sun != 1]
-        train_x = train_x.drop(['Sun'], axis=1)
-        test_x = test_x.drop(['Sun'], axis=1)
-        # print(train_x)
-        # print(test_x)
-        # print(train_x.shape[0]/n_shops, test_x.shape[0]/n_shops)
+    for i in range(0, n_shops):
+        np_array = x_data[(days_per_shop - test_days) + (i * days_per_shop): days_per_shop + (i * days_per_shop), :]
+        test_x = np.concatenate((test_x, np_array), axis=0)
 
-    # scale data in [-1, 1]
-    scaler = MinMaxScaler(feature_range=(-1, 1))
-    train_x = scaler.fit_transform(train_x)
-    test_x = scaler.fit_transform(test_x)
-    train_y = scaler.fit_transform(train_y)
-    test_y = scaler.fit_transform(test_y)
+        np_array = y_data[(days_per_shop - test_days) + (i * days_per_shop): days_per_shop + (i * days_per_shop), :]
+        test_y = np.concatenate((test_y, np_array), axis=0)
+
+        np_array = x_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
+        train_x = np.concatenate((train_x, np_array), axis=0)
+
+        np_array = x_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
+        train_y = np.concatenate((train_y, np_array), axis=0)
 
     # create npy files for sliding_window_model
     i = 0
