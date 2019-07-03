@@ -3,7 +3,7 @@ import numpy as np
 from keras import Sequential
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.engine.saving import load_model
-from keras.layers import LSTM, Dense
+from keras.layers import LSTM, Dense, Masking
 from matplotlib import pyplot
 from numpy import sqrt
 from sklearn.metrics import mean_squared_error
@@ -15,9 +15,10 @@ start_time = time.time()  # Time the execution
 DATA_TYPE = '.csv'
 INPUT_PATH = 'data/processed/'
 # INPUT_DATA = 'CATEGORIES_ALL_SHOPS'
-INPUT_DATA = 'PS4_SET_ALL_SHOPS'
+# INPUT_DATA = 'PS4_SET_ALL_SHOPS'
+INPUT_DATA = 'ALL_SHOPS_PRODUCT_20949'
 
-SCALE_DATA = 0  # 0 NO SCALING / 1 SCALING
+SCALE_DATA = 1  # 0 NO SCALING / 1 SCALING
 
 dataframe = pandas.read_csv(INPUT_PATH + INPUT_DATA + DATA_TYPE)
 dataframe = dataframe.rename(index=str, columns={'Unnamed: 0': 'item_id'})
@@ -40,10 +41,11 @@ n_shops = 60  # number of shops
 days_per_shop = 1034  # number of days both train and test
 test_days = test_date_range.nunique()  # number of test days
 train_days = days_per_shop - test_days  # number of train days
-n_features = 207  # 207 for products / 84 for categories
+n_features = 1  # 207 for products / 84 for categories
 
 x_data = x_data.values
 y_data = y_data.values
+
 
 # print(np.count_nonzero(x_data))
 
@@ -54,9 +56,9 @@ test_y = np.empty([0, n_features])
 
 
 for i in range(0, n_shops):
-    np_array = x_data[(days_per_shop-test_days) + (i * days_per_shop): days_per_shop + (i * days_per_shop), :]
     # pad test_x and test_y with zeros to match train shape
     # pad(array, ((top, bottom), (left, right)), mode)
+    np_array = x_data[(days_per_shop-test_days) + (i * days_per_shop): days_per_shop + (i * days_per_shop), :]
     np_array = np.pad(np_array, ((train_days - test_days, 0), (0, 0)), 'constant', constant_values=0)
     test_x = np.concatenate((test_x, np_array), axis=0)
 
@@ -67,7 +69,7 @@ for i in range(0, n_shops):
     np_array = x_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
     train_x = np.concatenate((train_x, np_array), axis=0)
 
-    np_array = x_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
+    np_array = y_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
     train_y = np.concatenate((train_y, np_array), axis=0)
 
 
@@ -114,13 +116,6 @@ if SCALE_DATA == 1:
     test_x = scale_data(test_x, scaler_test_x)
     test_y = scale_data(test_y, scaler_test_y)
 
-    #scaler_x = MinMaxScaler(feature_range=(0, 1))
-    #scaler_y = MinMaxScaler(feature_range=(0, 1))
-    #train_x = scaler_x.fit_transform(train_x)
-    #train_y = scaler_y.fit_transform(train_y)
-    #test_x = scaler_x.fit_transform(test_x)
-    #test_y = scaler_y.fit_transform(test_y)
-
 
 # shape data for lstm model (Samples, Time steps, Features) (60 shops, 973 days, 207 items + 7 onehot days + 1 s_day)
 train_x = train_x.reshape((n_shops, 1034 - test_days, train_x.shape[1]))  # 60, 973, 215
@@ -133,6 +128,7 @@ test_y = test_y.reshape((n_shops, 1034 - test_days, test_y.shape[1]))
 
 # design model
 model = Sequential()
+#model.add(Masking(mask_value=float(0), input_shape=(train_x.shape[1], train_x.shape[2])))
 model.add(LSTM(100, input_shape=(train_x.shape[1], train_x.shape[2]), return_sequences=True))
 model.add(Dense(train_y.shape[2]))
 model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mean_squared_error'])
@@ -183,10 +179,6 @@ if SCALE_DATA == 1:
     test_y = test_y.reshape(train_y.shape[0], train_y.shape[1], train_y.shape[2])
     test_pred = test_pred.reshape(train_y.shape[0], train_y.shape[1], train_y.shape[2])
 
-    #for i in range(60):
-    #    test_pred[i, ] = scaler_y.inverse_transform(test_pred[i])
-    #    test_y[i, ] = scaler_y.inverse_transform(test_y[i])
-
 
 # calculate MSE for each shop
 mse = []
@@ -220,6 +212,7 @@ for k in range(test_y.shape[0]):
 plot_shop = 25
 pyplot.plot(test_date_range, test_y_list[plot_shop*61:(plot_shop*61)+61], label='target')
 pyplot.plot(test_date_range, test_pred_list[plot_shop*61:(plot_shop*61)+61], label='predicted')
+pyplot.title('Cumulative sales of products for shop '+str(plot_shop))
 pyplot.xticks(rotation=45)
 pyplot.legend()
 pyplot.show()

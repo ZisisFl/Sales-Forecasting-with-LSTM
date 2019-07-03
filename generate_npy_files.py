@@ -136,7 +136,7 @@ else:
         np_array = x_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
         train_x = np.concatenate((train_x, np_array), axis=0)
 
-        np_array = x_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
+        np_array = y_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
         train_y = np.concatenate((train_y, np_array), axis=0)
 
     # create npy files for sliding_window_model
