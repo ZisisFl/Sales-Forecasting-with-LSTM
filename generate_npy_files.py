@@ -7,7 +7,7 @@ INPUT_PATH = 'data/processed/'
 # INPUT_DATA = 'CATEGORIES_ALL_SHOPS'
 INPUT_DATA = 'PS4_SET_ALL_SHOPS'
 
-FLAG = 1  # 0 GENERATE DATA PER SHOP / 1 GENERATE DATA PER DAY
+FLAG = 0  # 0 GENERATE DATA PER SHOP / 1 GENERATE DATA PER DAY
 SCALE_DATA = 1  # 0 NO SCALING / 1 SCALING
 
 dataframe = pandas.read_csv(INPUT_PATH + INPUT_DATA + DATA_TYPE)
@@ -69,20 +69,20 @@ def scale_data(target_data, minmax):
 
 if FLAG == 0:
     for i in range(0, n_shops):
-        np_array = x_data[(days_per_shop - test_days) + (i * days_per_shop): days_per_shop + (i * days_per_shop), :]
         # pad test_x and test_y with zeros to match train shape
         # pad(array, ((top, bottom), (left, right)), mode)
-        np_array = np.pad(np_array, ((973 - 61, 0), (0, 0)), 'constant', constant_values=0)
+        np_array = x_data[(days_per_shop - test_days) + (i * days_per_shop): days_per_shop + (i * days_per_shop), :]
+        np_array = np.pad(np_array, ((train_days - test_days, 0), (0, 0)), 'constant', constant_values=0)
         test_x = np.concatenate((test_x, np_array), axis=0)
 
         np_array = y_data[(days_per_shop - test_days) + (i * days_per_shop): days_per_shop + (i * days_per_shop), :]
-        np_array = np.pad(np_array, ((973 - 61, 0), (0, 0)), 'constant', constant_values=0)
+        np_array = np.pad(np_array, ((train_days - test_days, 0), (0, 0)), 'constant', constant_values=0)
         test_y = np.concatenate((test_y, np_array), axis=0)
 
         np_array = x_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
         train_x = np.concatenate((train_x, np_array), axis=0)
 
-        np_array = x_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
+        np_array = y_data[i * days_per_shop:(days_per_shop - test_days) + (i * days_per_shop), :]
         train_y = np.concatenate((train_y, np_array), axis=0)
 
     if SCALE_DATA == 1:

@@ -7,7 +7,6 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 import time
-from sklearn.preprocessing import MinMaxScaler
 
 start_time = time.time()  # Time the execution
 
@@ -35,7 +34,7 @@ x_data = y_data.iloc[:, :-8]
 y_data = y_data.iloc[:, :-8]
 
 
-# transform dataframes to numpy arrays
+# transform dataframes to np arrays
 x_data = x_data.values
 y_data = y_data.values
 
@@ -45,6 +44,7 @@ train_x, train_y = x_data[0:-61], y_data[0:-61]
 test_x, test_y = x_data[-61:], y_data[-61:]
 
 
+# calculates min max matrix for every column
 def scaler(target_data):
     minmax = []
     n_columns = target_data.shape[1]
@@ -57,6 +57,7 @@ def scaler(target_data):
     return minmax
 
 
+# scales data into [0, 1] according the matrix from scaler function
 def scale_data(target_data, minmax):
     target_data = target_data.astype(float)
     n_columns = target_data.shape[1]
@@ -68,6 +69,7 @@ def scale_data(target_data, minmax):
     return target_data
 
 
+# inverse scaling using a min max matrix
 def inverse_scaling(target_data, minmax_matrix):
     n_columns = target_data.shape[1]
     n_rows = target_data.shape[0]
@@ -87,13 +89,6 @@ if SCALE_DATA == 1:
     train_y = scale_data(train_y, scaler_train_y)
     test_x = scale_data(test_x, scaler_test_x)
     test_y = scale_data(test_y, scaler_test_y)
-
-    #scaler_x = MinMaxScaler(feature_range=(0, 1))
-    #scaler_y = MinMaxScaler(feature_range=(0, 1))
-    #train_x = scaler_x.fit_transform(train_x)
-    #train_y = scaler_y.fit_transform(train_y)
-    #test_x = scaler_x.fit_transform(test_x)
-    #test_y = scaler_y.fit_transform(test_y)
 
 
 # shape data for LSTM model
@@ -138,9 +133,6 @@ test_pred = model.predict(test_x)
 if SCALE_DATA == 1:
     test_pred = inverse_scaling(test_pred, scaler_test_y)
     test_y = inverse_scaling(test_y, scaler_test_y)
-    # with sklear scaler
-    # test_pred = scaler_y.inverse_transform(test_pred)
-    # test_y = scaler_y.inverse_transform(test_y)
 
 
 # calculate mse of predicted and test

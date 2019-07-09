@@ -5,13 +5,14 @@ from random import randint
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, list_of_ids, batch_size, in_dim, out_dim, days_per_shop, shuffle):
+    def __init__(self, list_of_ids, batch_size, in_dim, out_dim, days_per_shop, data_type, shuffle):
         'Initialization'
         self.list_of_ids = list_of_ids
         self.batch_size = batch_size
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.days_per_shop = days_per_shop
+        self.data_type = data_type
         self.shuffle = shuffle
         self.input_ids_list, self.target_ids_list = self.random_day()
         self.on_epoch_end()
@@ -39,6 +40,9 @@ class DataGenerator(keras.utils.Sequence):
 
         # Generate data
         x, y = self.__data_generation(input_ids_list_temp, target_ids_list_temp)
+        # save data to plot it later
+        if self.data_type == 'test':
+            np.save('data/data_rows_target/' + 'shop_' + str(index) + '_target' + '.npy', y)
 
         return x, y
 

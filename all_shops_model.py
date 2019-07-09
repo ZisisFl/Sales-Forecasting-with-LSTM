@@ -15,10 +15,10 @@ start_time = time.time()  # Time the execution
 DATA_TYPE = '.csv'
 INPUT_PATH = 'data/processed/'
 # INPUT_DATA = 'CATEGORIES_ALL_SHOPS'
-# INPUT_DATA = 'PS4_SET_ALL_SHOPS'
-INPUT_DATA = 'ALL_SHOPS_PRODUCT_20949'
+INPUT_DATA = 'PS4_SET_ALL_SHOPS'
+# INPUT_DATA = 'ALL_SHOPS_PRODUCT_20949'
 
-SCALE_DATA = 1  # 0 NO SCALING / 1 SCALING
+SCALE_DATA = 0  # 0 NO SCALING / 1 SCALING
 
 dataframe = pandas.read_csv(INPUT_PATH + INPUT_DATA + DATA_TYPE)
 dataframe = dataframe.rename(index=str, columns={'Unnamed: 0': 'item_id'})
@@ -35,20 +35,23 @@ x_data = x_data.iloc[:, :-8]
 # drop last 8 columns referring to one hot rep and S_day from the target values
 y_data = y_data.iloc[:, :-8]
 
+# create a date range dataframe for test days
 test_date_range = pandas.date_range(start='2015/09/01', end='2015/10/31')
 
 n_shops = 60  # number of shops
 days_per_shop = 1034  # number of days both train and test
 test_days = test_date_range.nunique()  # number of test days
 train_days = days_per_shop - test_days  # number of train days
-n_features = 1  # 207 for products / 84 for categories
+n_features = 207  # 207 for products / 84 for categories
 
+# transform dataframes to np arrays
 x_data = x_data.values
 y_data = y_data.values
 
-
+# get number of non zero values for a matrix
 # print(np.count_nonzero(x_data))
 
+# initialize train and test matrices
 train_x = np.empty([0, n_features])
 train_y = np.empty([0, n_features])
 test_x = np.empty([0, n_features])
@@ -73,6 +76,7 @@ for i in range(0, n_shops):
     train_y = np.concatenate((train_y, np_array), axis=0)
 
 
+# calculates min max matrix for every column
 def scaler(target_data):
     minmax = []
     n_columns = target_data.shape[1]
@@ -85,6 +89,7 @@ def scaler(target_data):
     return minmax
 
 
+# scales data into [0, 1] according the matrix from scaler function
 def scale_data(target_data, minmax):
     target_data = target_data.astype(float)
     n_columns = target_data.shape[1]
@@ -96,6 +101,7 @@ def scale_data(target_data, minmax):
     return target_data
 
 
+# inverse scaling using a min max matrix
 def inverse_scaling(target_data, minmax_matrix):
     n_columns = target_data.shape[1]
     n_rows = target_data.shape[0]
@@ -128,7 +134,7 @@ test_y = test_y.reshape((n_shops, 1034 - test_days, test_y.shape[1]))
 
 # design model
 model = Sequential()
-#model.add(Masking(mask_value=float(0), input_shape=(train_x.shape[1], train_x.shape[2])))
+# model.add(Masking(mask_value=float(0)))
 model.add(LSTM(100, input_shape=(train_x.shape[1], train_x.shape[2]), return_sequences=True))
 model.add(Dense(train_y.shape[2]))
 model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mean_squared_error'])
@@ -185,6 +191,7 @@ mse = []
 for i in range(n_shops):
     mse.append((mean_squared_error(test_y[i, -61:], test_pred[i, -61:])))
 
+
 print('MSE of all shops:', mse)
 print('MSE of Shop 25: %.3f' % mse[25])
 
@@ -210,9 +217,11 @@ for k in range(test_y.shape[0]):
         test_pred_list.append(sum_per_day_pred)
 
 plot_shop = 25
+# plot a single product
+# pyplot.plot(test_date_range, test_y[25, -61:, 20], label='target')
+# pyplot.plot(test_date_range, test_pred[25, -61:, 20], label='predicted')
 pyplot.plot(test_date_range, test_y_list[plot_shop*61:(plot_shop*61)+61], label='target')
 pyplot.plot(test_date_range, test_pred_list[plot_shop*61:(plot_shop*61)+61], label='predicted')
-pyplot.title('Cumulative sales of products for shop '+str(plot_shop))
 pyplot.xticks(rotation=45)
 pyplot.legend()
 pyplot.show()
